@@ -1,20 +1,24 @@
+import { DeviceStatusTable } from '@/components/device-status-table';
+import { StatCard } from '@/components/stat-card';
+import { mockReadings, mockSummary } from '@/lib/mock-data';
+
 export default function HomePage() {
   const stats = [
     {
       title: 'Active Devices',
-      value: '12',
+      value: mockSummary.activeDevices,
     },
     {
       title: 'Schools Connected',
-      value: '5',
+      value: mockSummary.schoolsConnected,
     },
     {
       title: 'Average Heat Index',
-      value: '39°C',
+      value: `${mockSummary.averageHeatIndex}°C`,
     },
     {
       title: 'Air Quality Status',
-      value: 'Moderate',
+      value: mockSummary.airQualityStatus,
     },
   ];
 
@@ -33,16 +37,11 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {stats.map((stat) => (
-            <div
+            <StatCard
               key={stat.title}
-              className="rounded-2xl bg-slate-900 border border-slate-800 p-6"
-            >
-              <p className="text-slate-400 mb-2">{stat.title}</p>
-
-              <h2 className="text-4xl font-bold">
-                {stat.value}
-              </h2>
-            </div>
+              title={stat.title}
+              value={stat.value}
+            />
           ))}
         </div>
 
@@ -53,27 +52,11 @@ export default function HomePage() {
             </h3>
 
             <div className="h-56 flex items-center justify-center text-slate-500">
-              Chart placeholder
+              Recharts visualization placeholder
             </div>
           </div>
 
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 min-h-[300px]">
-            <h3 className="text-2xl font-semibold mb-4">
-              Device Health
-            </h3>
-
-            <div className="space-y-4">
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span>CS-GH-NR-0001</span>
-                <span className="text-green-400">Online</span>
-              </div>
-
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span>CS-GH-NR-0002</span>
-                <span className="text-yellow-400">Low Battery</span>
-              </div>
-            </div>
-          </div>
+          <DeviceStatusTable readings={mockReadings} />
         </div>
       </div>
     </main>
