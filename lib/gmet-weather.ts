@@ -2,7 +2,8 @@ import 'server-only';
 
 import { OfficialObservationsResponse } from './types';
 
-const GMET_WEATHER_URL = 'https://www.meteo.gov.gh/weather/';
+const GMET_CITY = 'Tamale';
+const GMET_WEATHER_URL = 'https://www.meteo.gov.gh/weather/daily-table/tamale/';
 
 function decodeText(value: string) {
   return value
@@ -33,7 +34,13 @@ export async function fetchGMetWeather(): Promise<OfficialObservationsResponse |
   }
 
   const html = await response.text();
-  const location = decodeText(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? 'Accra');
+  const location = decodeText(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? '');
+
+  if (location.toLocaleLowerCase() !== GMET_CITY.toLocaleLowerCase()) {
+    console.error(`GMet returned ${location || 'an unknown city'} instead of ${GMET_CITY}`);
+    return null;
+  }
+
   const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)];
 
   for (const row of rows) {
@@ -59,8 +66,8 @@ export async function fetchGMetWeather(): Promise<OfficialObservationsResponse |
       fetchedAt,
       observations: [
         {
-          stationId: 'gmet-public-forecast',
-          stationName: location || 'Accra',
+          stationId: 'gmet-public-forecast-tamale',
+          stationName: GMET_CITY,
           wigosStationIdentifier: 'Not provided',
           observedAt: fetchedAt,
           forecastTime,
@@ -75,7 +82,7 @@ export async function fetchGMetWeather(): Promise<OfficialObservationsResponse |
         },
       ],
       notice:
-        'Current-day forecast published by GMet. This is not a ClimaSense sensor reading or a real-time station observation.',
+        'Current-day forecast for Tamale published by GMet. This is not a ClimaSense sensor reading or a real-time station observation.',
     };
   }
 
