@@ -22,3 +22,30 @@ export type DashboardSummary = {
   averageHeatIndex: number;
   airQualityStatus: 'Good' | 'Moderate' | 'Unhealthy' | 'Unknown';
 };
+
+export type OfficialObservation = {
+  stationId: string;
+  stationName: string;
+  wigosStationIdentifier: string;
+  observedAt: string;
+  temperatureC: number | null;
+  humidityPercent: number | null;
+  rainfallMm: number | null;
+  pressureHpa: number | null;
+  windSpeedMs: number | null;
+  windDirectionDegrees: number | null;
+  freshness: 'current' | 'delayed' | 'stale';
+};
+
+export type OfficialObservationsResponse = {
+  source: {
+    name: string;
+    dataset: string;
+    dataPolicy: string;
+    climateAtlasUrl: string;
+    observationsUrl: string;
+  };
+  fetchedAt: string;
+  observations: OfficialObservation[];
+  notice: string;
+};
