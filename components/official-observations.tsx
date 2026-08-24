@@ -19,11 +19,11 @@ export function OfficialObservations({ data }: Props) {
     return (
       <section className="rounded-2xl border border-amber-400/30 bg-amber-400/5 p-6">
         <p className="text-sm font-semibold uppercase tracking-wider text-amber-300">
-          Official observations unavailable
+          Official GMet forecast unavailable
         </p>
         <p className="mt-2 text-slate-300">
-          The GMet feed could not provide a Northern Ghana station observation.
-          No placeholder reading is being shown as live data.
+          GMet could not provide its current public weather forecast. No
+          placeholder reading is being presented as official data.
         </p>
       </section>
     );
@@ -34,9 +34,9 @@ export function OfficialObservations({ data }: Props) {
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-cyan-300">
-            Official regional observations
+            Official GMet weather
           </p>
-          <h2 className="mt-1 text-2xl font-semibold">Northern Ghana station data</h2>
+          <h2 className="mt-1 text-2xl font-semibold">Current forecast</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">{data.notice}</p>
         </div>
         <div className="flex gap-4 text-sm">
@@ -46,7 +46,7 @@ export function OfficialObservations({ data }: Props) {
             target="_blank"
             rel="noreferrer"
           >
-            GMet WIS2
+            GMet forecast
           </a>
           <a
             className="text-cyan-300 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-300"
@@ -68,7 +68,9 @@ export function OfficialObservations({ data }: Props) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold">{observation.stationName}</h3>
-                <p className="text-xs text-slate-500">Station {observation.stationId}</p>
+                <p className="text-xs text-slate-500">
+                  {observation.weatherDescription ?? 'Weather forecast'}
+                </p>
               </div>
               <span
                 className={`rounded-full border px-2 py-1 text-xs font-semibold capitalize ${freshnessStyle[observation.freshness]}`}
@@ -97,7 +99,8 @@ export function OfficialObservations({ data }: Props) {
             </dl>
 
             <p className="mt-5 border-t border-slate-800 pt-3 text-xs text-slate-500">
-              Observed {new Date(observation.observedAt).toLocaleString('en-GB', {
+              Forecast for {observation.forecastTime ?? 'the current period'} GMT. Retrieved{' '}
+              {new Date(observation.observedAt).toLocaleString('en-GB', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
                 timeZone: 'Africa/Accra',
