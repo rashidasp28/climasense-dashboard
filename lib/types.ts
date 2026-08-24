@@ -28,6 +28,8 @@ export type OfficialObservation = {
   stationName: string;
   wigosStationIdentifier: string;
   observedAt: string;
+  forecastTime?: string;
+  weatherDescription?: string;
   temperatureC: number | null;
   humidityPercent: number | null;
   rainfallMm: number | null;
