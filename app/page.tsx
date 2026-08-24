@@ -40,7 +40,7 @@ export default async function HomePage() {
           <h1 className="mb-4 text-5xl font-bold">ClimaSense Dashboard</h1>
           <p className="max-w-3xl text-lg text-slate-300">
             Climate-health monitoring for schools and communities, combining
-            clearly labelled official regional observations with a preview of
+            clearly labelled official GMet forecast information with a preview of
             the future ClimaSense sensor network.
           </p>
         </div>
