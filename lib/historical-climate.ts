@@ -122,7 +122,6 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
     accumulator.minTemperatures.push(minTemperature);
     accumulator.maxTemperatures.push(maxTemperature);
     months.set(monthKey, accumulator);
-    latestAvailableDate = toIsoDate(dateKey);
   });
 
   const points: HistoricalClimatePoint[] = Array.from(months.entries()).map(([key, values]) => {
