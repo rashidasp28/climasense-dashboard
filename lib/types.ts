@@ -66,6 +66,7 @@ export type HistoricalClimateYear = {
   year: number;
   annualRainfallMm: number | null;
   averageTemperatureC: number | null;
+  isPartial: boolean;
 };
 
 export type HistoricalClimateResponse = {
@@ -77,6 +78,8 @@ export type HistoricalClimateResponse = {
   period: {
     startYear: number;
     endYear: number;
+    requestedThrough: string;
+    latestAvailableDate: string | null;
   };
   source: {
     name: string;
