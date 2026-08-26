@@ -51,3 +51,39 @@ export type OfficialObservationsResponse = {
   observations: OfficialObservation[];
   notice: string;
 };
+
+export type HistoricalClimatePoint = {
+  year: number;
+  month: number;
+  label: string;
+  rainfallMm: number | null;
+  temperatureMeanC: number | null;
+  temperatureMinC: number | null;
+  temperatureMaxC: number | null;
+};
+
+export type HistoricalClimateYear = {
+  year: number;
+  annualRainfallMm: number | null;
+  averageTemperatureC: number | null;
+};
+
+export type HistoricalClimateResponse = {
+  location: {
+    name: string;
+    latitude: number;
+    longitude: number;
+  };
+  period: {
+    startYear: number;
+    endYear: number;
+  };
+  source: {
+    name: string;
+    dataset: string;
+    methodologyUrl: string;
+  };
+  points: HistoricalClimatePoint[];
+  years: HistoricalClimateYear[];
+  notice: string;
+};

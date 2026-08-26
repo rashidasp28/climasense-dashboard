@@ -1,11 +1,15 @@
 import { DeviceStatusTable } from '@/components/device-status-table';
+import { HistoricalClimateTrends } from '@/components/historical-climate-trends';
 import { OfficialObservations } from '@/components/official-observations';
 import { StatCard } from '@/components/stat-card';
-import { fetchOfficialObservations } from '@/lib/api';
+import { fetchHistoricalClimate, fetchOfficialObservations } from '@/lib/api';
 import { mockReadings, mockSummary } from '@/lib/mock-data';
 
 export default async function HomePage() {
-  const officialObservations = await fetchOfficialObservations();
+  const [officialObservations, historicalClimate] = await Promise.all([
+    fetchOfficialObservations(),
+    fetchHistoricalClimate(),
+  ]);
 
   const stats = [
     {
@@ -40,13 +44,17 @@ export default async function HomePage() {
           <h1 className="mb-4 text-5xl font-bold">ClimaSense Dashboard</h1>
           <p className="max-w-3xl text-lg text-slate-300">
             Climate-health monitoring for schools and communities, combining
-            clearly labelled official GMet forecast information with a preview of
-            the future ClimaSense sensor network.
+            clearly labelled official GMet forecast information with historical
+            climate context and a preview of the future ClimaSense sensor network.
           </p>
         </div>
 
         <div className="mb-10">
           <OfficialObservations data={officialObservations} />
+        </div>
+
+        <div className="mb-10">
+          <HistoricalClimateTrends data={historicalClimate} />
         </div>
 
         <div className="mb-5">
@@ -68,31 +76,11 @@ export default async function HomePage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="min-h-[300px] rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="mb-4 text-2xl font-semibold">Climate context</h3>
-            <p className="text-slate-400">
-              The Ghana Climate Atlas provides long-term historical and
-              projected temperature and rainfall context. A comparative chart
-              can be added after dataset reuse and attribution requirements are
-              confirmed with GMet.
-            </p>
-            <a
-              className="mt-6 inline-flex text-cyan-300 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-              href="https://www.meteo.gov.gh/climate-atlas/climate-change/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Explore the Ghana Climate Atlas
-            </a>
+        <div>
+          <div className="mb-3 rounded-lg border border-violet-400/20 bg-violet-400/5 px-4 py-3 text-sm text-violet-200">
+            Simulated prototype data
           </div>
-
-          <div>
-            <div className="mb-3 rounded-lg border border-violet-400/20 bg-violet-400/5 px-4 py-3 text-sm text-violet-200">
-              Simulated prototype data
-            </div>
-            <DeviceStatusTable readings={mockReadings} />
-          </div>
+          <DeviceStatusTable readings={mockReadings} />
         </div>
       </div>
     </main>
