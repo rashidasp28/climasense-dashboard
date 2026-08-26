@@ -48,26 +48,33 @@ function average(values: number[]): number | null {
   return Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1));
 }
 
+function formatPowerDate(date: Date): string {
+  return date.toISOString().slice(0, 10).replaceAll('-', '');
+}
+
+function toIsoDate(dateKey: string): string {
+  return `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
+}
+
 export async function fetchHistoricalClimate(): Promise<HistoricalClimateResponse> {
-  const currentYear = new Date().getUTCFullYear();
-  const endYear = currentYear - 1;
-  const startYear = endYear - 4;
-  const start = `${startYear}0101`;
-  const end = `${endYear}1231`;
+  const today = new Date();
+  const currentYear = today.getUTCFullYear();
+  const startYear = currentYear - 9;
+  const requestedThrough = today.toISOString().slice(0, 10);
 
   const params = new URLSearchParams({
     parameters: 'PRECTOTCORR,T2M,T2M_MIN,T2M_MAX',
     community: 'AG',
     longitude: String(LOCATION.longitude),
     latitude: String(LOCATION.latitude),
-    start,
-    end,
+    start: `${startYear}0101`,
+    end: formatPowerDate(today),
     format: 'JSON',
   });
 
   const response = await fetch(
     `https://power.larc.nasa.gov/api/temporal/daily/point?${params.toString()}`,
-    { next: { revalidate: 60 * 60 * 24 * 30 } },
+    { next: { revalidate: 60 * 60 * 6 } },
   );
 
   if (!response.ok) {
@@ -81,9 +88,22 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
   }
 
   const months = new Map<string, MonthAccumulator>();
+  let latestAvailableDate: string | null = null;
 
   Object.keys(parameter.T2M).sort().forEach((dateKey) => {
     if (!/^\d{8}$/.test(dateKey)) return;
+
+    const rainfall = parameter.PRECTOTCORR?.[dateKey];
+    const meanTemperature = parameter.T2M?.[dateKey];
+    const minTemperature = parameter.T2M_MIN?.[dateKey];
+    const maxTemperature = parameter.T2M_MAX?.[dateKey];
+    const hasCompleteDay =
+      validValue(rainfall) &&
+      validValue(meanTemperature) &&
+      validValue(minTemperature) &&
+      validValue(maxTemperature);
+
+    if (!hasCompleteDay) return;
 
     const year = Number(dateKey.slice(0, 4));
     const month = Number(dateKey.slice(4, 6));
@@ -96,20 +116,13 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
       maxTemperatures: [],
     };
 
-    const rainfall = parameter.PRECTOTCORR?.[dateKey];
-    const meanTemperature = parameter.T2M?.[dateKey];
-    const minTemperature = parameter.T2M_MIN?.[dateKey];
-    const maxTemperature = parameter.T2M_MAX?.[dateKey];
-
-    if (validValue(rainfall)) {
-      accumulator.rainfall += rainfall;
-      accumulator.rainfallDays += 1;
-    }
-    if (validValue(meanTemperature)) accumulator.meanTemperatures.push(meanTemperature);
-    if (validValue(minTemperature)) accumulator.minTemperatures.push(minTemperature);
-    if (validValue(maxTemperature)) accumulator.maxTemperatures.push(maxTemperature);
-
+    accumulator.rainfall += rainfall;
+    accumulator.rainfallDays += 1;
+    accumulator.meanTemperatures.push(meanTemperature);
+    accumulator.minTemperatures.push(minTemperature);
+    accumulator.maxTemperatures.push(maxTemperature);
     months.set(monthKey, accumulator);
+    latestAvailableDate = toIsoDate(dateKey);
   });
 
   const points: HistoricalClimatePoint[] = Array.from(months.entries()).map(([key, values]) => {
@@ -125,30 +138,41 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
     };
   });
 
-  const years: HistoricalClimateYear[] = Array.from({ length: 5 }, (_, index) => startYear + index).map(
-    (year) => {
-      const yearPoints = points.filter((point) => point.year === year);
-      const rainfallValues = yearPoints
-        .map((point) => point.rainfallMm)
-        .filter((value): value is number => value !== null);
-      const temperatureValues = yearPoints
-        .map((point) => point.temperatureMeanC)
-        .filter((value): value is number => value !== null);
+  const latestAvailableYear = latestAvailableDate
+    ? Number(latestAvailableDate.slice(0, 4))
+    : currentYear;
 
-      return {
-        year,
-        annualRainfallMm:
-          rainfallValues.length > 0
-            ? Number(rainfallValues.reduce((sum, value) => sum + value, 0).toFixed(1))
-            : null,
-        averageTemperatureC: average(temperatureValues),
-      };
-    },
-  );
+  const years: HistoricalClimateYear[] = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index,
+  ).map((year) => {
+    const yearPoints = points.filter((point) => point.year === year);
+    const rainfallValues = yearPoints
+      .map((point) => point.rainfallMm)
+      .filter((value): value is number => value !== null);
+    const temperatureValues = yearPoints
+      .map((point) => point.temperatureMeanC)
+      .filter((value): value is number => value !== null);
+
+    return {
+      year,
+      annualRainfallMm:
+        rainfallValues.length > 0
+          ? Number(rainfallValues.reduce((sum, value) => sum + value, 0).toFixed(1))
+          : null,
+      averageTemperatureC: average(temperatureValues),
+      isPartial: year === latestAvailableYear && latestAvailableDate?.slice(5) !== '12-31',
+    };
+  });
 
   return {
     location: LOCATION,
-    period: { startYear, endYear },
+    period: {
+      startYear,
+      endYear: currentYear,
+      requestedThrough,
+      latestAvailableDate,
+    },
     source: {
       name: 'NASA POWER',
       dataset: 'Daily meteorology, MERRA-2-based gridded estimates',
@@ -157,6 +181,6 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
     points,
     years,
     notice:
-      'Historical gridded estimates for climate context. These values are separate from official GMet observations and future ClimaSense sensor readings.',
+      'Automatically refreshed historical gridded estimates for climate context. Source publication can lag behind today. These values are separate from official GMet observations and ClimaSense sensor readings.',
   };
 }
