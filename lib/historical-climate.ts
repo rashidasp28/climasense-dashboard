@@ -96,7 +96,7 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
   const completeDateKeys = Object.keys(meanTemperatureByDate)
     .sort()
     .filter((dateKey) => {
-      if (!/^\\d{8}$/.test(dateKey)) return false;
+      if (!/^\d{8}$/.test(dateKey)) return false;
       return (
         validValue(rainfallByDate[dateKey]) &&
         validValue(meanTemperatureByDate[dateKey]) &&
