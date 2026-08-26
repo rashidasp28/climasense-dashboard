@@ -87,16 +87,21 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
     throw new Error('NASA POWER response did not include all requested parameters');
   }
 
+  const rainfallByDate = parameter.PRECTOTCORR;
+  const meanTemperatureByDate = parameter.T2M;
+  const minTemperatureByDate = parameter.T2M_MIN;
+  const maxTemperatureByDate = parameter.T2M_MAX;
+
   const months = new Map<string, MonthAccumulator>();
-  const completeDateKeys = Object.keys(parameter.T2M)
+  const completeDateKeys = Object.keys(meanTemperatureByDate)
     .sort()
     .filter((dateKey) => {
       if (!/^\\d{8}$/.test(dateKey)) return false;
       return (
-        validValue(parameter.PRECTOTCORR[dateKey]) &&
-        validValue(parameter.T2M[dateKey]) &&
-        validValue(parameter.T2M_MIN[dateKey]) &&
-        validValue(parameter.T2M_MAX[dateKey])
+        validValue(rainfallByDate[dateKey]) &&
+        validValue(meanTemperatureByDate[dateKey]) &&
+        validValue(minTemperatureByDate[dateKey]) &&
+        validValue(maxTemperatureByDate[dateKey])
       );
     });
   const latestDateKey: string | undefined = completeDateKeys.at(-1);
@@ -105,10 +110,10 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
     : null;
 
   completeDateKeys.forEach((dateKey) => {
-    const rainfall = parameter.PRECTOTCORR[dateKey];
-    const meanTemperature = parameter.T2M[dateKey];
-    const minTemperature = parameter.T2M_MIN[dateKey];
-    const maxTemperature = parameter.T2M_MAX[dateKey];
+    const rainfall = rainfallByDate[dateKey];
+    const meanTemperature = meanTemperatureByDate[dateKey];
+    const minTemperature = minTemperatureByDate[dateKey];
+    const maxTemperature = maxTemperatureByDate[dateKey];
     const year = Number(dateKey.slice(0, 4));
     const month = Number(dateKey.slice(4, 6));
     const monthKey = `${year}-${String(month).padStart(2, '0')}`;
