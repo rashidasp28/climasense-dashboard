@@ -13,6 +13,7 @@ const LOCATION = {
 };
 
 const MISSING_VALUE = -999;
+const CACHE_SECONDS = 60 * 60 * 6;
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -28,6 +29,12 @@ type PowerResponse = {
       T2M_MIN?: PowerParameter;
       T2M_MAX?: PowerParameter;
     };
+  };
+};
+
+type PowerConfigurationResponse = {
+  settings?: {
+    end?: string;
   };
 };
 
@@ -62,19 +69,37 @@ export async function fetchHistoricalClimate(): Promise<HistoricalClimateRespons
   const startYear = currentYear - 9;
   const requestedThrough = today.toISOString().slice(0, 10);
 
+  const configurationResponse = await fetch(
+    'https://power.larc.nasa.gov/api/temporal/daily/configuration',
+    { next: { revalidate: CACHE_SECONDS } },
+  );
+  if (!configurationResponse.ok) {
+    throw new Error(
+      `NASA POWER configuration request failed with status ${configurationResponse.status}`,
+    );
+  }
+
+  const configuration = (await configurationResponse.json()) as PowerConfigurationResponse;
+  const sourceEnd = configuration.settings?.end;
+  const sourceEndDate = sourceEnd ? new Date(sourceEnd) : null;
+  if (!sourceEndDate || Number.isNaN(sourceEndDate.getTime())) {
+    throw new Error('NASA POWER configuration did not include a valid latest date');
+  }
+  const availableThrough = sourceEndDate.getTime() < today.getTime() ? sourceEndDate : today;
+
   const params = new URLSearchParams({
     parameters: 'PRECTOTCORR,T2M,T2M_MIN,T2M_MAX',
     community: 'AG',
     longitude: String(LOCATION.longitude),
     latitude: String(LOCATION.latitude),
     start: `${startYear}0101`,
-    end: formatPowerDate(today),
+    end: formatPowerDate(availableThrough),
     format: 'JSON',
   });
 
   const response = await fetch(
     `https://power.larc.nasa.gov/api/temporal/daily/point?${params.toString()}`,
-    { next: { revalidate: 60 * 60 * 6 } },
+    { next: { revalidate: CACHE_SECONDS } },
   );
 
   if (!response.ok) {
