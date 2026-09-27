@@ -35,7 +35,7 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-950 p-8 text-white">
+    <main id="main-content" className="min-h-screen bg-slate-950 p-8 text-white" tabIndex={-1}>
       <div className="mx-auto max-w-7xl">
         <div className="mb-10">
           <div className="mb-4 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-sm text-cyan-200">
