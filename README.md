@@ -26,6 +26,8 @@ GET /api/readings
 
 Until electronic sensor nodes and their ingestion service are operational, the dashboard must continue to label prototype readings as simulated.
 
+Use the [live telemetry readiness checklist](docs/live-telemetry-readiness-checklist.md) before replacing simulated values with API data.
+
 ## Local development
 
 Requirements:
@@ -52,6 +54,7 @@ npm run build
 
 - `app/`: Next.js pages and server routes
 - `components/`: dashboard panels and charts
+- `docs/`: integration and release-readiness guidance
 - `lib/gmet-weather.ts`: Tamale GMet forecast adapter
 - `lib/historical-climate.ts`: NASA POWER retrieval and aggregation
 - `lib/api.ts`: data-access boundary
